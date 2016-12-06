@@ -35,25 +35,40 @@ ui <- dashboardPage(skin = "green",
                           fluidRow(
                             box(leafletOutput("mapView"),
                                 title = "Select a Monitoring Location", 
-                                width = 6, 
-                                status = "primary",
-                                solidHeader = TRUE, 
-                                collapsible = FALSE), 
-                            box(title = "Title 2", 
-                                width = 6,
+                                width = 12, 
                                 status = "primary",
                                 solidHeader = TRUE, 
                                 collapsible = FALSE)
                           ), 
                           fluidRow(
-                            infoBoxOutput("flowThreshold"),
-                            infoBoxOutput("flowTodaysNeed"), 
-                            infoBoxOutput("flowNaturalFlow")
+                            tabBox(
+                              side = "left",
+                              title = "Visualizations", 
+                              id = "visulizationTabs", 
+                              tabPanel("Flow"), 
+                              tabPanel("Ground Water"), 
+                              tabPanel("Juvenile Salmon")
+                            ),
+                            column(width = 6,
+                                   fluidRow(
+                                     infoBoxOutput("flowThreshold", width = 12) 
+                                   ),
+                                   fluidRow(
+                                     infoBoxOutput("flowTodaysNeed", width = 12)
+                                   ),
+                                   fluidRow(
+                                     infoBoxOutput("flowNaturalFlow", width = 12)
+                                   )
+                                   
+                            )
+                            
                           )
                         ), 
                         tabItem(
                           tabName = "about", 
-                          tags$h4("Some information about FLowWest, who are, what we do")
+                          tags$h1("About FlowWest"), 
+                          tags$br(), 
+                          includeHTML("flowwest_about.html")
                         )
                       )
                       
@@ -62,7 +77,7 @@ ui <- dashboardPage(skin = "green",
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
-  # Leaflet Map View ===========================================================
+  # Render Leaflet MapView ===========================================================
   #
   output$mapView <- renderLeaflet({
     leaflet(data = gwlLatLong) %>%
@@ -101,7 +116,7 @@ server <- function(input, output) {
         options = layersControlOptions(collapsed = FALSE))
   })
   
-  # Infoboxes Render =================================================================
+  # Render Infoboxes =================================================================
   # 
   output$flowThreshold <- renderInfoBox({
     infoBox(
@@ -121,6 +136,11 @@ server <- function(input, output) {
       color = "orange", fill = TRUE
     )
   })
+  
+  # Render Visualizations ===========================================================
+  #
+  
+  
 }
 
 # Run the application 
