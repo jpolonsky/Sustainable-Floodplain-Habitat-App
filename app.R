@@ -46,13 +46,14 @@ ui <- dashboardPage(skin = "green",
                                 collapsible = FALSE)
                           ), 
                           fluidRow(
-                            infoBox("Results 1", 10 * 2, fill = TRUE),
-                            infoBoxOutput("progressBox2"),
-                            infoBoxOutput("approvalBox2")
+                            infoBoxOutput("flowThreshold"),
+                            infoBoxOutput("flowTodaysNeed"), 
+                            infoBoxOutput("flowNaturalFlow")
                           )
                         ), 
                         tabItem(
-                          tabName = "about"
+                          tabName = "about", 
+                          tags$h4("Some information about FLowWest, who are, what we do")
                         )
                       )
                       
@@ -60,7 +61,9 @@ ui <- dashboardPage(skin = "green",
 )
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  # Map view using leaflet  
+  
+  # Leaflet Map View ===========================================================
+  #
   output$mapView <- renderLeaflet({
     leaflet(data = gwlLatLong) %>%
       
@@ -96,6 +99,27 @@ server <- function(input, output) {
         baseGroups = c("Open Maps Street Map (default)", "Light Map", "Satellite"),
         overlayGroups = c("Ground Water Wells", "Screw Trap"), 
         options = layersControlOptions(collapsed = FALSE))
+  })
+  
+  # Infoboxes Render =================================================================
+  # 
+  output$flowThreshold <- renderInfoBox({
+    infoBox(
+      "The flow threshold is currently at", round(rnorm(1, mean=20000, sd=100)), "cfs", 
+      color = "green", fill = TRUE
+    )
+  })
+  output$flowTodaysNeed <- renderInfoBox({
+    infoBox(
+      "Today's need is at", round(rnorm(1, mean=100, sd=5)), "cfs", 
+      color = "yellow", fill = TRUE
+    )
+  })
+  output$flowNaturalFlow <- renderInfoBox({
+    infoBox(
+      "Natural Flow in", paste(sample(1:20, size = 1), "Days", sep = " "), 
+      color = "orange", fill = TRUE
+    )
   })
 }
 
