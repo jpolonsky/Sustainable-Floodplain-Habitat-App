@@ -9,6 +9,8 @@
 library(shiny)
 library(shinydashboard)
 library(leaflet)
+library(ggplot2)
+library(plotly)
 
 # import modules
 source("global.R")
@@ -18,33 +20,49 @@ source("leafletGlobal.R")
 ui <- dashboardPage(
   dashboardHeader(title = "Sustainable Floodplain Habitat Finder", 
                   titleWidth = 500),
-  dashboardSidebar(), 
+  dashboardSidebar( 
+                   sidebarMenu(
+                     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                     menuItem("About FlowWest", icon = icon("th"), 
+                              tabName = "about",
+                              badgeColor = "green")
+                   )
+  ), 
   dashboardBody(
-    fluidRow(
-      box(leafletOutput("mapView"),
-          title = "Title 1", 
-          width = 6, 
-          status = "primary",
-          solidHeader = TRUE, 
-          collapsible = FALSE), 
-      box(title = "Title 2", 
-          width = 6,
-          status = "primary",
-          solidHeader = TRUE, 
-          collapsible = FALSE)
-    ), 
-    fluidRow(
-      box(title = "summary statistics", 
-          width = 6, 
-          solidHeader = TRUE, 
-          status = "warning", 
-          collapsible = FALSE),
-      box(title = "summary statistics", 
-          width = 6, 
-          solidHeader = TRUE, 
-          status = "warning", 
-          collapsible = FALSE)
+    tabItems(
+      tabItem(
+        tabName = "dashboard",
+        fluidRow(
+          box(leafletOutput("mapView"),
+              title = "Select a Monitoring Location", 
+              width = 6, 
+              status = "primary",
+              solidHeader = TRUE, 
+              collapsible = FALSE), 
+          box(title = "Title 2", 
+              width = 6,
+              status = "primary",
+              solidHeader = TRUE, 
+              collapsible = FALSE)
+        ), 
+        fluidRow(
+          box(title = "summary statistics", 
+              width = 6, 
+              solidHeader = TRUE, 
+              status = "warning", 
+              collapsible = FALSE),
+          box(title = "summary statistics", 
+              width = 6, 
+              solidHeader = TRUE, 
+              status = "warning", 
+              collapsible = FALSE)
+        )
+      ), 
+      tabItem(
+        tabName = "about"
+      )
     )
+    
   )
 )
 # Define server logic required to draw a histogram

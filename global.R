@@ -15,3 +15,4 @@ flowLatLong <- read_rds("flowLatLong.rds")
 # full data imports 
 gwlData <- read_rds("groundWaterLevels.rds")
 screwTrapData <- read_rds("screwTrapData.rds")
+flowData <- read_rds("flowData_BND_1993_2016.rds")
