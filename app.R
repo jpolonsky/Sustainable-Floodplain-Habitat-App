@@ -17,16 +17,16 @@ source("global.R")
 source("leafletGlobal.R")
 
 # Define UI for application that draws a histogram
-ui <- dashboardPage(
+ui <- dashboardPage(skin = "green",
   dashboardHeader(title = "Sustainable Floodplain Habitat Finder", 
                   titleWidth = 500),
   dashboardSidebar( 
-                   sidebarMenu(
-                     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-                     menuItem("About FlowWest", icon = icon("th"), 
-                              tabName = "about",
-                              badgeColor = "green")
-                   )
+    sidebarMenu(
+      menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+      menuItem("About FlowWest", icon = icon("th"), 
+               tabName = "about",
+               badgeColor = "green")
+    )
   ), 
   dashboardBody(
     tabItems(
