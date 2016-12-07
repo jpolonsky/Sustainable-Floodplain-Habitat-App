@@ -1,9 +1,9 @@
 # Title: Sustainable Floodplain Habitat Dashboard
 # Author: Emanuel Rodriguez
-# 
+# Description:
 #
 #
-
+# ================================================================================
 
 
 library(shiny)
@@ -30,7 +30,7 @@ ui <- dashboardPage(skin = "green",
                                  tabName = "about",
                                  badgeColor = "green"), 
                         menuItem("Data Sources", tabName = "rawData", icon = icon("list-alt")), 
-                        menuItem("Source Code", icon = icon("github-alt"), 
+                        menuItem("Source Code", icon = icon("github"), 
                                  href = "https://github.com/ERGZ/Sustainable-Floodplain-Habitat-App")
                       )
                     ), 
@@ -50,7 +50,7 @@ ui <- dashboardPage(skin = "green",
                                 width = 12, 
                                 status = "primary",
                                 solidHeader = TRUE, 
-                                collapsible = FALSE)
+                                collapsible = TRUE)
                           ), 
                           fluidRow(
                             
@@ -59,9 +59,9 @@ ui <- dashboardPage(skin = "green",
                               side = "left",
                               title = "Visualizations", 
                               id = "visulizationTabs", 
-                              tabPanel("Flow"), 
-                              tabPanel("Ground Water"), 
-                              tabPanel("Juvenile Salmon")
+                              tabPanel("Flow", plotOutput("flowVisualization")), 
+                              tabPanel("Ground Water", plotOutput("gwVisualization")), 
+                              tabPanel("Juvenile Salmon", plotOutput("screwTrapVisualization"))
                             ),
                             
                             # Analytic Results 
@@ -80,14 +80,16 @@ ui <- dashboardPage(skin = "green",
                             
                           )
                         ), 
+                        # FlowWest About Page
                         tabItem(
                           tabName = "about",
-                          tags$img(src="FlowWestLogo.png", 
-                                   align="left", width=50, height=10), 
-                          tags$h1("Who We Are", align="center"), 
-                          tags$hr(),
-                          tags$br()
+                          tags$img(src="FlowWestLogo.png",
+                                   width=250, height=73,
+                                   style="display: block; margin-left: auto; margin-right: auto;"),
+                          tags$br(),
+                          includeHTML("flowwest_about.html")
                         ), 
+                        # Raw Data Sources Page
                         tabItem(
                           tabName = "rawData", 
                           tags$h2("Let users look at and get raw data in this app")
@@ -161,7 +163,17 @@ server <- function(input, output) {
   
   # Render Visualizations ===========================================================
   #
+  # Flow Data Visualization; 
+  output$flowVisualization <- renderPlot({
+    plot(1:10, 1:10)
+  })
   
+  # Groudwater Visualization
+  output$gwVisualization <- renderPlot({
+    plot(1:10, sqrt(1:10))
+  })
+  
+  # Screwtrap Visualization
   
 }
 
