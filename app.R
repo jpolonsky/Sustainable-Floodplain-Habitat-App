@@ -1,6 +1,6 @@
-#
-#
-#
+# Title: Sustainable Floodplain Habitat Dashboard
+# Author: Emanuel Rodriguez
+# 
 #
 #
 
@@ -18,21 +18,33 @@ source("leafletGlobal.R")
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "green",
+                    # Dashboard header ========================================================
                     dashboardHeader(title = "Sustainable Floodplain Habitat Finder", 
                                     titleWidth = 500),
+                    
+                    # Dashboard Sidebar =======================================================
                     dashboardSidebar( 
                       sidebarMenu(
                         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                         menuItem("About FlowWest", icon = icon("th"), 
                                  tabName = "about",
-                                 badgeColor = "green")
+                                 badgeColor = "green"), 
+                        menuItem("Data Sources", tabName = "rawData", icon = icon("list-alt")), 
+                        menuItem("Source Code", icon = icon("github-alt"), 
+                                 href = "https://github.com/ERGZ/Sustainable-Floodplain-Habitat-App")
                       )
                     ), 
+                    
+                    # Dashboard Body ========================================================
                     dashboardBody(
                       tabItems(
                         tabItem(
+                          
+                          # Main Dashboard
                           tabName = "dashboard",
                           fluidRow(
+                            
+                            # Map View Box
                             box(leafletOutput("mapView"),
                                 title = "Select a Monitoring Location", 
                                 width = 12, 
@@ -41,7 +53,9 @@ ui <- dashboardPage(skin = "green",
                                 collapsible = FALSE)
                           ), 
                           fluidRow(
-                            tabBox(
+                            
+                            # Visualizations Box
+                            tabBox(width = 8,
                               side = "left",
                               title = "Visualizations", 
                               id = "visulizationTabs", 
@@ -49,7 +63,9 @@ ui <- dashboardPage(skin = "green",
                               tabPanel("Ground Water"), 
                               tabPanel("Juvenile Salmon")
                             ),
-                            column(width = 6,
+                            
+                            # Analytic Results 
+                            column(width = 4,
                                    fluidRow(
                                      infoBoxOutput("flowThreshold", width = 12) 
                                    ),
@@ -65,10 +81,12 @@ ui <- dashboardPage(skin = "green",
                           )
                         ), 
                         tabItem(
-                          tabName = "about", 
-                          tags$h1("About FlowWest"), 
-                          tags$br(), 
+                          tabName = "about",
                           includeHTML("flowwest_about.html")
+                        ), 
+                        tabItem(
+                          tabName = "rawData", 
+                          tags$h2("Let users look at and get raw data in this app")
                         )
                       )
                       
