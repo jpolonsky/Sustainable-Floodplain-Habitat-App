@@ -99,7 +99,7 @@ ui <- dashboardPage(skin = "green",
                     )
 )
 # Define server logic required to draw a histogram
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   # Render Leaflet MapView ===========================================================
   #
@@ -163,17 +163,38 @@ server <- function(input, output) {
   
   # Render Visualizations ===========================================================
   #
-  # Flow Data Visualization; 
-  output$flowVisualization <- renderPlot({
-    plot(1:10, 1:10)
-  })
+  # Flow Data Visualization
+  # Create an observer that observes for a clicked flow marker on the map
+  observeEvent(input$mapView_marker_click, 
+               {
+                 output$flowVisualization <- renderPlot({
+                   plot(1:100, sqrt(1:100))
+                 })
+               })
+  
   
   # Groudwater Visualization
-  output$gwVisualization <- renderPlot({
-    plot(1:10, sqrt(1:10))
+  observe({
+    mapClick <- input$mapView_marker_click
+    if (is.null(mapClick)){
+      return()
+    }
+    else if (mapClick[1] != "screwTrap_markers"){
+      return()
+    }
+    else 
+      output$screwTrapVisualization <- renderPlot({
+        plot(1:100, 1:100)
+      })
   })
   
   # Screwtrap Visualization
+  observeEvent(input$mapView_marker_click, 
+               {
+                 output$flowVisualization <- renderPlot({
+                   plot(1:100, sqrt(1:100))
+                 })
+               })
   
 }
 
