@@ -60,7 +60,7 @@ ui <- dashboardPage(skin = "green",
                                    title = "Visualizations", 
                                    id = "visulizationTabs", 
                                    tabPanel("Flow", plotOutput("flowVisualization")), 
-                                   tabPanel("Ground Water", plotOutput("gwVisualization")), 
+                                   tabPanel("Ground Water", plotlyOutput("gwVisualization")), 
                                    tabPanel("Juvenile Salmon", plotOutput("screwTrapVisualization"))
                             ),
                             
@@ -192,15 +192,10 @@ server <- function(input, output, session) {
       return()
     }
     else 
-      output$gwVisualization <- renderPlot({
-        p <- 
+      output$gwVisualization <- renderPlotly({
           gwlData %>%
           filter(LATITUDE == mapClick[3] & LONGITUDE == mapClick[4]) %>%
-          ggplot() +       
-          geom_line(aes(reading_date, wse)) +
-          xlab("Date") + ylab("Water Surface Elevation")
-        
-        print(p)
+          plot_ly(x=~reading_date, y=~wse, type = "scatter", mode = "lines")
           
       })
   })
