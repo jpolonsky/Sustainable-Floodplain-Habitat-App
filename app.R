@@ -160,7 +160,7 @@ server <- function(input, output, session) {
   output$flowTodaysNeed <- renderInfoBox({
     infoBox(
       "Today's need is at", Qmetric(input$dateSelect)$NeedToday, "cfs", 
-      color = "yellow", fill = TRUE
+      color = paste0(TodaysNeedColor(input$dateSelect)), fill = TRUE
     )
   })
   output$flowNaturalFlow <- renderInfoBox({
@@ -184,7 +184,8 @@ server <- function(input, output, session) {
     } else {
       output$flowVisualization <- renderPlotly({
         flowData %>%
-          plot_ly(x=~Date, y=~mean_daily, type ="scatter", mode="lines")
+          plot_ly(x=~Date, y=~mean_daily, type ="scatter", mode="lines", name="Flow") %>%
+          add_trace(x=input$dateSelect, type ="scatter", name=paste0(input$dateSelect))
       })
     }
   })
