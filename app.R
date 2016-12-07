@@ -59,13 +59,18 @@ ui <- dashboardPage(skin = "green",
                                    side = "left",
                                    title = "Visualizations", 
                                    id = "visulizationTabs", 
-                                   tabPanel("Flow", plotOutput("flowVisualization")), 
+                                   tabPanel("Flow", plotlyOutput("flowVisualization")), 
                                    tabPanel("Ground Water", plotlyOutput("gwVisualization")), 
                                    tabPanel("Juvenile Salmon", plotOutput("screwTrapVisualization"))
                             ),
                             
                             # Analytic Results 
                             column(width = 4,
+                                   fluidRow(
+                                     dateInput("dateSelect", label = "Select a Custom Date", 
+                                               min = "2015-01-01", max = "2016-12-07", 
+                                               format = "yyyy-mm-dd", value = "2016-07-10")
+                                   ),
                                    fluidRow(
                                      infoBoxOutput("flowThreshold", width = 12) 
                                    ),
@@ -148,13 +153,13 @@ server <- function(input, output, session) {
   # 
   output$flowThreshold <- renderInfoBox({
     infoBox(
-      "The flow threshold is currently at", round(rnorm(1, mean=20000, sd=100)), "cfs", 
+      "The flow threshold is currently at", Qmetric(input$dateSelect)$Threshold, "cfs",
       color = "green", fill = TRUE
     )
   })
   output$flowTodaysNeed <- renderInfoBox({
     infoBox(
-      "Today's need is at", round(rnorm(1, mean=100, sd=5)), "cfs", 
+      "Today's need is at", Qmetric(input$dateSelect)$NeedToday, "cfs", 
       color = "yellow", fill = TRUE
     )
   })
@@ -177,8 +182,9 @@ server <- function(input, output, session) {
     } else if (mapClick[1] != "flow_markers") {
       return()
     } else {
-      output$flowVisualization <- renderPlot({
-        plot(1:100, sqrt(1:100))
+      output$flowVisualization <- renderPlotly({
+        flowData %>%
+          plot_ly(x=~Date, y=~mean_daily, type ="scatter", mode="lines")
       })
     }
   })
@@ -195,7 +201,8 @@ server <- function(input, output, session) {
       output$gwVisualization <- renderPlotly({
           gwlData %>%
           filter(LATITUDE == mapClick[3] & LONGITUDE == mapClick[4]) %>%
-          plot_ly(x=~reading_date, y=~wse, type = "scatter", mode = "lines")
+          plot_ly(x=~reading_date, y=~wse, type = "scatter", mode = "lines") %>% 
+          add_trace(x=~reading_date, y=~wse, type ="scatter", mode = "points")
           
       })
   })
