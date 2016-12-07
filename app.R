@@ -25,12 +25,12 @@ ui <- dashboardPage(skin = "green",
                     # Dashboard Sidebar =======================================================
                     dashboardSidebar( 
                       sidebarMenu(
-                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")), 
+                        menuItem("Data Sources", tabName = "rawData", icon = icon("list-alt")),
                         menuItem("About FlowWest", icon = icon("th"), 
                                  tabName = "about",
-                                 badgeColor = "green"), 
-                        menuItem("Data Sources", tabName = "rawData", icon = icon("list-alt")), 
-                        menuItem("Source Code", icon = icon("github"), 
+                                 badgeColor = "green"),
+                        menuItem("Source Code", icon = icon("question-circle"), 
                                  href = "https://github.com/ERGZ/Sustainable-Floodplain-Habitat-App")
                       )
                     ), 
@@ -56,12 +56,12 @@ ui <- dashboardPage(skin = "green",
                             
                             # Visualizations Box
                             tabBox(width = 8,
-                              side = "left",
-                              title = "Visualizations", 
-                              id = "visulizationTabs", 
-                              tabPanel("Flow", plotOutput("flowVisualization")), 
-                              tabPanel("Ground Water", plotOutput("gwVisualization")), 
-                              tabPanel("Juvenile Salmon", plotOutput("screwTrapVisualization"))
+                                   side = "left",
+                                   title = "Visualizations", 
+                                   id = "visulizationTabs", 
+                                   tabPanel("Flow", plotOutput("flowVisualization")), 
+                                   tabPanel("Ground Water", plotOutput("gwVisualization")), 
+                                   tabPanel("Juvenile Salmon", plotOutput("screwTrapVisualization"))
                             ),
                             
                             # Analytic Results 
@@ -104,7 +104,7 @@ server <- function(input, output, session) {
   # Render Leaflet MapView ===========================================================
   #
   output$mapView <- renderLeaflet({
-    leaflet(data = gwlLatLong) %>%
+    leaflet() %>%
       
       # set a group of basemaps to choose from 
       addTiles(group = "Open Maps Street Map (default)") %>%
@@ -114,10 +114,12 @@ server <- function(input, output, session) {
       # map layers to choose from
       
       # well data layer shows up by default 
-      addCircleMarkers(clusterOptions = markerClusterOptions(),
+      addCircleMarkers(data = gwlLatLong,
+                       clusterOptions = markerClusterOptions(),
                        lat = ~lat, 
                        lng = ~lng, 
                        stroke = TRUE, 
+                       popup = "View Ground Water Visual below",
                        group = "Ground Water Wells") %>%
       
       # fish data can be added with a checkbox
@@ -125,6 +127,7 @@ server <- function(input, output, session) {
                  lng=~lng, 
                  lat=~lat,
                  group = "Screw Trap", 
+                 popup = "View Screw Trap Visual Below",
                  layerId = "screwTrap_markers", 
                  icon = blueFishIcon) %>%
       
@@ -132,6 +135,7 @@ server <- function(input, output, session) {
       addMarkers(data=flowLatLong, 
                  lat = ~lat, 
                  lng = ~lng, 
+                 popup = "View Flow Visual Below",
                  layerId = "flow_markers") %>%
       
       addLayersControl(
@@ -162,39 +166,60 @@ server <- function(input, output, session) {
   })
   
   # Render Visualizations ===========================================================
+  # =================================================================================
   #
   # Flow Data Visualization
   # Create an observer that observes for a clicked flow marker on the map
-  observeEvent(input$mapView_marker_click, 
-               {
-                 output$flowVisualization <- renderPlot({
-                   plot(1:100, sqrt(1:100))
-                 })
-               })
+  observe({
+    mapClick <- input$mapView_marker_click
+    if (is.null(mapClick)) {
+      return()
+    } else if (mapClick[1] != "flow_markers") {
+      return()
+    } else {
+      output$flowVisualization <- renderPlot({
+        plot(1:100, sqrt(1:100))
+      })
+    }
+  })
   
   
   # Groudwater Visualization
+  #
   observe({
     mapClick <- input$mapView_marker_click
     if (is.null(mapClick)){
       return()
     }
-    else if (mapClick[1] != "screwTrap_markers"){
-      return()
-    }
     else 
-      output$screwTrapVisualization <- renderPlot({
-        plot(1:100, 1:100)
+      output$gwVisualization <- renderPlot({
+        p <- 
+          gwlData %>%
+          filter(LATITUDE == mapClick[3] & LONGITUDE == mapClick[4]) %>%
+          ggplot() +       
+          geom_line(aes(reading_date, wse)) +
+          xlab("Date") + ylab("Water Surface Elevation")
+        
+        print(p)
+          
       })
   })
   
   # Screwtrap Visualization
-  observeEvent(input$mapView_marker_click, 
-               {
-                 output$flowVisualization <- renderPlot({
-                   plot(1:100, sqrt(1:100))
-                 })
-               })
+  observe({
+    mapClick <- input$mapView_marker_click
+    if (is.null(mapClick)) {
+      return()
+    } else if (mapClick[1] != "screwTrap_markers") {
+      return()
+    } else {
+      output$screwTrapVisualization <- renderPlot({
+        plot(-100:100, (-100:100)^2)
+      })
+    }
+  })
+  
+
   
 }
 
