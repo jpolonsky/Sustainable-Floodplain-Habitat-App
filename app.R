@@ -82,7 +82,11 @@ ui <- dashboardPage(skin = "green",
                         ), 
                         tabItem(
                           tabName = "about",
-                          includeHTML("flowwest_about.html")
+                          tags$img(src="FlowWestLogo.png", 
+                                   align="left", width=50, height=10), 
+                          tags$h1("Who We Are", align="center"), 
+                          tags$hr(),
+                          tags$br()
                         ), 
                         tabItem(
                           tabName = "rawData", 
