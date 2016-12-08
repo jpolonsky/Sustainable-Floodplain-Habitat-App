@@ -60,7 +60,9 @@ Qmetric <- function(d, threshold=20000) {
 # change the color of the infobox depending on the needs of the day 
 TodaysNeedColor <- function(d) {
   qM <- Qmetric(d)
-  if (qM$NeedToday <= 100)
+  if (is.null(qM$NeedToday))
+    "green"
+  else if (qM$NeedToday <= 100)
     "green"
   else if (qM$NeedToday > 100 & qM$NeedToday < 10000)
     "yellow"
