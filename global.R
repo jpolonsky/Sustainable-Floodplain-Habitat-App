@@ -24,6 +24,11 @@ predictedFlowValues <- read_rds("predictedFlowValues.rds")
 
 # given a date get the mean daily for the flow data 
 GetMeanDaily <- function(d) {
+  # date ranges do not match across datasets
+  # change date is new date is obtained!!!!
+  if (as.Date(d) > as.Date("2016-12-05")) {
+    return(NULL)
+  }
   flowData$mean_daily[which(flowData$date == d)]
 }
 
@@ -41,7 +46,7 @@ GetDaysUntilThreshold <- function(d, threshold, ciLevel="p10") {
 # fow showcase leave threshold at a default of 20000
 Qmetric <- function(d, threshold=20000) {
   # allocate memory to output 
-  results <- vector(length = 4, mode = "list")
+  results <- vector(length = 2, mode = "list")
   
   # compute the amount needed today
   todayNeed <- threshold - GetMeanDaily(d)
