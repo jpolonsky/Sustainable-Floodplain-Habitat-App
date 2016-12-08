@@ -61,7 +61,7 @@ ui <- dashboardPage(skin = "green",
                                    id = "visulizationTabs", 
                                    tabPanel("Flow", plotlyOutput("flowVisualization")), 
                                    tabPanel("Ground Water", plotlyOutput("gwVisualization")), 
-                                   tabPanel("Juvenile Salmon", plotOutput("screwTrapVisualization"))
+                                   tabPanel("Juvenile Salmon", plotlyOutput("screwTrapVisualization"))
                             ),
                             
                             # Analytic Results 
@@ -69,7 +69,7 @@ ui <- dashboardPage(skin = "green",
                                    tabBox(
                                      width = 12, 
                                      side = "left", 
-                                     title = "Insights", 
+                                     title = tagList(icon("pie-chart"), "Insights"), 
                                      id = "insighTab",
                                      tabPanel("Flow",
                                               dateInput("dateSelect", label = "Select a Custom Date",
@@ -272,14 +272,19 @@ server <- function(input, output, session) {
     } else if (mapClick[1] != "screwTrap_markers") {
       return()
     } else {
-      output$screwTrapVisualization <- renderPlot({
-        plot(-100:100, (-100:100)^2)
+      output$screwTrapVisualization <- renderPlotly({
+        screwTrapData %>%
+          select(reading_month, Unmarked, FinalRun) %>%
+          group_by(FinalRun, reading_month) %>%
+          summarise(
+            Monthly_Unmarked_Mean = mean(Unmarked, na.rm = TRUE)
+          ) %>%
+          plot_ly(x=~reading_month, y=~Monthly_Unmarked_Mean, 
+                  type="bar", color=~FinalRun)
+        
       })
     }
   })
-  
-  
-  
 }
 
 # Run the application 
