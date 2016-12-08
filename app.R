@@ -73,8 +73,8 @@ ui <- dashboardPage(skin = "green",
                                      id = "insighTab",
                                      tabPanel("Flow",
                                               dateInput("dateSelect", label = "Select a Custom Date",
-                                                        min = "2015-01-01", max = "2016-12-07",
-                                                        format = "yyyy-mm-dd", value = "2016-07-10"),
+                                                        min = "2015-01-01", max = "2016-12-04",
+                                                        format = "yyyy-mm-dd", value = "2016-12-01"),
                                               
                                               fluidRow(
                                                 infoBoxOutput("flowThreshold", width = 12) 

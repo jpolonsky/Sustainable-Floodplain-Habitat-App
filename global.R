@@ -1,6 +1,6 @@
 # Title: global.R 
 # Author: 
-# Description:
+# Description: A set of R global functions ti be used in app.R
 
 # library imports 
 library(readr)
@@ -34,13 +34,16 @@ GetMeanDaily <- function(d) {
 
 # get the number of days until threshold is achieved
 GetDaysUntilThreshold <- function(d, threshold, ciLevel="p10") {
+  # the current mean daily
+  currentMeanDaily <- GetMeanDaily(d)
+  if (is.null(currentMeanDaily)) {
+    stop("Current date is out of range")
+  }
   # create a dates to search through
-  dateLookups <- seq(as.Date(d), by = "day", length.out = 100)
-  valueLookups <- predictedFlowValues %>%
+  dateLookups <- predictedFlowValues %>%
     filter(date > as.Date(d), key == ciLevel)
-  
-  resultDate <-valueLookups$date[which(valueLookups$value > 20000)][1]
-  return(as.numeric(as.Date(resultDate) - as.Date(d)))
+
+  return(as.Date(dateLookups) - as.Date(d))
 }
 
 # fow showcase leave threshold at a default of 20000
@@ -74,3 +77,5 @@ TodaysNeedColor <- function(d) {
   else 
     "red"
 }
+
+
