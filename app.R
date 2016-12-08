@@ -27,10 +27,10 @@ ui <- dashboardPage(skin = "green",
                       sidebarMenu(
                         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")), 
                         menuItem("Data Sources", tabName = "rawData", icon = icon("list-alt")),
-                        menuItem("About FlowWest", icon = icon("th"), 
+                        menuItem("About FlowWest", icon = icon("question-circle"), 
                                  tabName = "about",
                                  badgeColor = "green"),
-                        menuItem("Source Code", icon = icon("question-circle"), 
+                        menuItem("Source Code", icon = icon("github"), 
                                  href = "https://github.com/ERGZ/Sustainable-Floodplain-Habitat-App")
                       )
                     ), 
@@ -70,7 +70,7 @@ ui <- dashboardPage(skin = "green",
                                      width = 12, 
                                      side = "left", 
                                      title = "Insights", 
-                                     id = "insighTab", 
+                                     id = "insighTab",
                                      tabPanel("Flow", 
                                               fluidRow(
                                                 dateInput("dateSelect", label = "Select a Custom Date", 
@@ -141,7 +141,7 @@ server <- function(input, output, session) {
       
       # well data layer shows up by default 
       addCircleMarkers(data = gwlLatLong,
-                       clusterOptions = markerClusterOptions(),
+                       clusterOptions = markerClusterOptions(removeOutsideVisibleBounds = TRUE),
                        lat = ~lat, 
                        lng = ~lng, 
                        stroke = TRUE, 
@@ -177,7 +177,8 @@ server <- function(input, output, session) {
   output$flowThreshold <- renderInfoBox({
     infoBox(
       "The flow threshold is currently at", Qmetric(input$dateSelect)$Threshold, "cfs",
-      color = "green", fill = TRUE
+      color = "green", 
+      fill = TRUE
     )
   })
   output$flowTodaysNeed <- renderInfoBox({
@@ -217,7 +218,11 @@ server <- function(input, output, session) {
     } else {
       output$flowVisualization <- renderPlotly({
         flowData %>%
-          plot_ly(x=~Date, y=~mean_daily, type ="scatter", mode="lines", name="Flow") %>%
+          plot_ly(x=~Date, y=~mean_daily, 
+                  type = "scatter", 
+                  mode = "lines+markers", 
+                  name = "Flow", 
+                  text = ~paste("Daily Mean: ", mean_daily)) %>%
           add_trace(x=input$dateSelect, type ="scatter", name=paste0(input$dateSelect))
       })
     }
@@ -225,7 +230,7 @@ server <- function(input, output, session) {
   
   
   # Groudwater Visualization
-  #
+  # Observer observes for the 
   observe({
     mapClick <- input$mapView_marker_click
     if (is.null(mapClick)){
@@ -235,7 +240,11 @@ server <- function(input, output, session) {
       output$gwVisualization <- renderPlotly({
         gwlData %>%
           filter(LATITUDE == mapClick[3] & LONGITUDE == mapClick[4]) %>%
-          plot_ly(x=~reading_date, y=~wse, type = "scatter", mode = "lines", name="Ground Water Levels")
+          plot_ly(x=~reading_date, y=~wse, 
+                  type = "scatter", 
+                  mode = "lines", 
+                  name="Ground Water Levels", 
+                  text = ~paste("Water Surface Elevation: ", wse, "ft."))
         
       })
   })
