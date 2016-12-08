@@ -57,7 +57,7 @@ ui <- dashboardPage(skin = "green",
                             # Visualizations Box
                             tabBox(width = 8,
                                    side = "left",
-                                   title = "Visualizations", 
+                                   title = tagList(shiny::icon("area-chart"), "Visualizations"), 
                                    id = "visulizationTabs", 
                                    tabPanel("Flow", plotlyOutput("flowVisualization")), 
                                    tabPanel("Ground Water", plotlyOutput("gwVisualization")), 
@@ -71,12 +71,11 @@ ui <- dashboardPage(skin = "green",
                                      side = "left", 
                                      title = "Insights", 
                                      id = "insighTab",
-                                     tabPanel("Flow", 
-                                              fluidRow(
-                                                dateInput("dateSelect", label = "Select a Custom Date", 
-                                                          min = "2015-01-01", max = "2016-12-07", 
-                                                          format = "yyyy-mm-dd", value = "2016-07-10")
-                                              ),
+                                     tabPanel("Flow",
+                                              dateInput("dateSelect", label = "Select a Custom Date",
+                                                        min = "2015-01-01", max = "2016-12-07",
+                                                        format = "yyyy-mm-dd", value = "2016-07-10"),
+                                              
                                               fluidRow(
                                                 infoBoxOutput("flowThreshold", width = 12) 
                                               ),
@@ -87,19 +86,26 @@ ui <- dashboardPage(skin = "green",
                                                 infoBoxOutput("flowNaturalFlow", width = 12)
                                               )
                                      ), 
-                                     tabPanel("Ground Water", 
-                                              fluidRow(
-                                                dateInput("dateSelect", label = "Select a Custom Date", 
-                                                          min = "2015-01-01", max = "2016-12-07", 
-                                                          format = "yyyy-mm-dd", value = "2016-07-10")
-                                              ),
+                                     tabPanel("Ground Water",
+                                              dateInput("dateSelect", label = "Select a Custom Date",
+                                                        min = "2015-01-01", max = "2016-12-07",
+                                                        format = "yyyy-mm-dd", value = "2016-12-01"),
                                               fluidRow(
                                                 infoBoxOutput("gwMetric1", width = 12) 
                                               ),
                                               fluidRow(
                                                 infoBoxOutput("gwMetric2", width = 12)
                                               )), 
-                                     tabPanel("Juvenile Fish")
+                                     tabPanel("Juvenile Fish", 
+                                              dateInput("dateSelect", label = "Select a Custom Date",
+                                                        min = "2015-01-01", max = "2016-12-07",
+                                                        format = "yyyy-mm-dd", value = "2016-12-01"),
+                                              fluidRow(
+                                                infoBoxOutput("screwTrapMetric1", width = 12) 
+                                              ),
+                                              fluidRow(
+                                                infoBoxOutput("screwTrapMetric2", width = 12)
+                                              ))
                                    )
                                    
                             )
@@ -204,6 +210,15 @@ server <- function(input, output, session) {
     infoBox("Ground Water Metrics 2", fill = TRUE)
   })
   
+  # ScrewTrap Infoboxes -----------------------------------------------------------
+  output$screwTrapMetric1 <- renderInfoBox({
+    infoBox("Screw Trap Metrics 1", fill = TRUE, color ="olive")
+  })
+  
+  output$screwTrapMetric2 <- renderInfoBox({
+    infoBox("Screw Trap Metrics 2", fill = TRUE, color ="olive")
+  })
+  
   # Render Visualizations ===========================================================
   # =================================================================================
   #
@@ -220,7 +235,7 @@ server <- function(input, output, session) {
         flowData %>%
           plot_ly(x=~Date, y=~mean_daily, 
                   type = "scatter", 
-                  mode = "lines+markers", 
+                  mode = "lines", 
                   name = "Flow", 
                   text = ~paste("Daily Mean: ", mean_daily)) %>%
           add_trace(x=input$dateSelect, type ="scatter", name=paste0(input$dateSelect))
@@ -242,7 +257,7 @@ server <- function(input, output, session) {
           filter(LATITUDE == mapClick[3] & LONGITUDE == mapClick[4]) %>%
           plot_ly(x=~reading_date, y=~wse, 
                   type = "scatter", 
-                  mode = "lines", 
+                  mode = "lines+markers", 
                   name="Ground Water Levels", 
                   text = ~paste("Water Surface Elevation: ", wse, "ft."))
         
