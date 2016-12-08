@@ -23,13 +23,38 @@ ParseFile <- function(filename) {
   colnames(DF) <- c("date", "p90", "p75","p50", "p25", "p10")
   DF$date <- as.Date(DF$date, format = "%m/%d/%Y")
   
-  # TODO: make this functional with lappy for purrr
-  DF$p90 <- as.numeric(DF$p90)
-  DF$p75 <- as.numeric(DF$p75)
-  DF$p50 <- as.numeric(DF$p50)
-  DF$p25 <- as.numeric(DF$p25)
-  DF$p10 <- as.numeric(DF$p10)
-  
   return(DF)
 } 
 
+
+ParseDir <- function(dir) {
+  currentWd <- getwd()
+  tempWD <- setwd(dir)
+  listOfFiles <- list.files(".")
+  print(listOfFiles)
+  
+  for (item in listOfFiles) {
+    print(item)
+    tempDF <- ParseFile(item)
+    write.csv(tempDF, paste0(item,".csv"), row.names = FALSE)
+  }
+}
+
+setwd("csv_version/")
+csvList <- list.files(".")
+
+for (csv in csvList) {
+  temp <- read.csv(csv, stringsAsFactors = FALSE)
+  temp$seed <- rep(temp[1,1], nrow(temp))
+  
+  write.csv(temp, paste(csv), row.names=FALSE)
+  rm(temp)
+}
+
+
+df <- read.csv("DLTC1_20161123to20170930.txt.csv", stringsAsFactors = FALSE)
+for (csv in csvList[-1]) {
+  temp <- read.csv(csv, stringsAsFactors = FALSE)
+  df <- rbind(temp, df)
+  rm(temp)
+}

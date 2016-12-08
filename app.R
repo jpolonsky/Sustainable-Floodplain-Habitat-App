@@ -97,8 +97,8 @@ ui <- dashboardPage(skin = "green",
                                                 infoBoxOutput("gwMetric2", width = 12)
                                               )), 
                                      tabPanel("Juvenile Fish", 
-                                              dateInput("dateSelect", label = "Select a Custom Date",
-                                                        min = "2015-01-01", max = "2016-12-07",
+                                              dateInput("dateSelectFish", label = "Select a Custom Date",
+                                                        min = "1995-01-01", max = "2016-12-07",
                                                         format = "yyyy-mm-dd", value = "2016-12-01"),
                                               fluidRow(
                                                 infoBoxOutput("screwTrapMetric1", width = 12) 
@@ -212,11 +212,15 @@ server <- function(input, output, session) {
   
   # ScrewTrap Infoboxes -----------------------------------------------------------
   output$screwTrapMetric1 <- renderInfoBox({
-    infoBox("Screw Trap Metrics 1", fill = TRUE, color ="olive")
+    infoBox("The number of Juvenile Salmon to Date:", 
+            paste0(GetSalmonAgg(input$dateSelectFish), " Counted Fish"),
+            fill = TRUE, color ="olive")
   })
   
   output$screwTrapMetric2 <- renderInfoBox({
-    infoBox("Screw Trap Metrics 2", fill = TRUE, color ="olive")
+    infoBox("Compared to the Historical value: ", 
+            paste0(SalmonDifference(input$dateSelectFish)$HistoricalValue, " Fish"),
+            fill = TRUE, color ="yellow")
   })
   
   # Render Visualizations ===========================================================
@@ -280,7 +284,8 @@ server <- function(input, output, session) {
             Monthly_Unmarked_Mean = mean(Unmarked, na.rm = TRUE)
           ) %>%
           plot_ly(x=~reading_month, y=~Monthly_Unmarked_Mean, 
-                  type="bar", color=~FinalRun)
+                  type="bar", color=~FinalRun) %>%
+          layout(barmode = "stacked")
         
       })
     }

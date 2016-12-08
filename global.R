@@ -17,6 +17,7 @@ gwlData <- read_rds("groundWaterLevels.rds")
 screwTrapData <- read_rds("screwTrapData.rds")
 flowData <- read_rds("flowData_BND_1993_2016.rds")
 predictedFlowValues <- read_rds("predictedFlowValues.rds")
+shastaPreds <- read_rds("shasta_preds_gathered_by_ci.rds")
 
 # Infobox Metrics ===============================================================
 
@@ -33,17 +34,13 @@ GetMeanDaily <- function(d) {
 }
 
 # get the number of days until threshold is achieved
-GetDaysUntilThreshold <- function(d, threshold, ciLevel="p10") {
-  # the current mean daily
-  currentMeanDaily <- GetMeanDaily(d)
-  if (is.null(currentMeanDaily)) {
-    stop("Current date is out of range")
-  }
+GetDaysUntilThreshold <- function(d, threshold=20000, ciLevel="p10") {
+  
   # create a dates to search through
-  dateLookups <- predictedFlowValues %>%
-    filter(date > as.Date(d), key == ciLevel)
+  dateLookups <- shastaPreds %>%
+    filter(seed == d, key == ciLevel, value >= threshold)
 
-  return(as.Date(dateLookups) - as.Date(d))
+  return(as.Date(dateLookups[1,1]) - as.Date(d))
 }
 
 # fow showcase leave threshold at a default of 20000
@@ -60,7 +57,33 @@ Qmetric <- function(d, threshold=20000) {
   list("Threshold" = threshold, 
        "NeedToday" = todayNeed)
   
-  }
+}
+
+# Juvenile Fish Metrics ---------------------------------------------------------
+GetSalmonAgg <- function(d) {
+  yearData <- screwTrapData %>%
+    filter(reading_year == format(as.Date(d), "%Y")) %>%
+    select(SampleDate_formated, Unmarked) %>%
+    group_by(SampleDate_formated) %>%
+    summarise(
+      daily_total = sum(Unmarked, na.rm = TRUE)
+    )
+  
+  sum(yearData$daily_total[yearData$SampleDate_formated < as.Date(d)], na.rm = TRUE)
+}
+
+SalmonDifference <- function(d) {
+  selected <- GetSalmonAgg(d)
+  
+  lookUpValue <- paste0("2016-",format(as.Date(d), "%m-%d"))
+  historicalAgg <- salmonRunsAggs$Running.Sum.of.Unmarked[salmonRunsAggs$day.month.year == lookUpValue]
+  historicalAgg <- parse_number(historicalAgg)
+  
+  list(
+    "HistoricalValue" = historicalAgg, 
+    "Difference" = (historicalAgg - selected)
+  )
+}
 
 
 # Infobox Helpers 
