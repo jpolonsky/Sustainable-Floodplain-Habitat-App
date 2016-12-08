@@ -66,19 +66,40 @@ ui <- dashboardPage(skin = "green",
                             
                             # Analytic Results 
                             column(width = 4,
-                                   fluidRow(
-                                     dateInput("dateSelect", label = "Select a Custom Date", 
-                                               min = "2015-01-01", max = "2016-12-07", 
-                                               format = "yyyy-mm-dd", value = "2016-07-10")
-                                   ),
-                                   fluidRow(
-                                     infoBoxOutput("flowThreshold", width = 12) 
-                                   ),
-                                   fluidRow(
-                                     infoBoxOutput("flowTodaysNeed", width = 12)
-                                   ),
-                                   fluidRow(
-                                     infoBoxOutput("flowNaturalFlow", width = 12)
+                                   tabBox(
+                                     width = 12, 
+                                     side = "left", 
+                                     title = "Insights", 
+                                     id = "insighTab", 
+                                     tabPanel("Flow", 
+                                              fluidRow(
+                                                dateInput("dateSelect", label = "Select a Custom Date", 
+                                                          min = "2015-01-01", max = "2016-12-07", 
+                                                          format = "yyyy-mm-dd", value = "2016-07-10")
+                                              ),
+                                              fluidRow(
+                                                infoBoxOutput("flowThreshold", width = 12) 
+                                              ),
+                                              fluidRow(
+                                                infoBoxOutput("flowTodaysNeed", width = 12)
+                                              ),
+                                              fluidRow(
+                                                infoBoxOutput("flowNaturalFlow", width = 12)
+                                              )
+                                     ), 
+                                     tabPanel("Ground Water", 
+                                              fluidRow(
+                                                dateInput("dateSelect", label = "Select a Custom Date", 
+                                                          min = "2015-01-01", max = "2016-12-07", 
+                                                          format = "yyyy-mm-dd", value = "2016-07-10")
+                                              ),
+                                              fluidRow(
+                                                infoBoxOutput("gwMetric1", width = 12) 
+                                              ),
+                                              fluidRow(
+                                                infoBoxOutput("gwMetric2", width = 12)
+                                              )), 
+                                     tabPanel("Juvenile Fish")
                                    )
                                    
                             )
@@ -151,6 +172,8 @@ server <- function(input, output, session) {
   
   # Render Infoboxes =================================================================
   # 
+  
+  # Flow Infoboxes -----------------------------------------------------------------
   output$flowThreshold <- renderInfoBox({
     infoBox(
       "The flow threshold is currently at", Qmetric(input$dateSelect)$Threshold, "cfs",
@@ -165,9 +188,19 @@ server <- function(input, output, session) {
   })
   output$flowNaturalFlow <- renderInfoBox({
     infoBox(
-      "Natural Flow in", paste(sample(1:20, size = 1), "Days", sep = " "), 
+      "Natural Flow in", paste(GetDaysUntilThreshold(input$dateSelect, 20000), 
+                               "Days", sep = " "), 
       color = "orange", fill = TRUE
     )
+  })
+  
+  # Groundwater Infoboxes --------------------------------------------------------
+  output$gwMetric1 <- renderInfoBox({
+    infoBox("Ground Water Metrics 1", fill = TRUE)
+  })
+  
+  output$gwMetric2 <- renderInfoBox({
+    infoBox("Ground Water Metrics 2", fill = TRUE)
   })
   
   # Render Visualizations ===========================================================
@@ -200,11 +233,10 @@ server <- function(input, output, session) {
     }
     else 
       output$gwVisualization <- renderPlotly({
-          gwlData %>%
+        gwlData %>%
           filter(LATITUDE == mapClick[3] & LONGITUDE == mapClick[4]) %>%
-          plot_ly(x=~reading_date, y=~wse, type = "scatter", mode = "lines") %>% 
-          add_trace(x=~reading_date, y=~wse, type ="scatter", mode = "points")
-          
+          plot_ly(x=~reading_date, y=~wse, type = "scatter", mode = "lines", name="Ground Water Levels")
+        
       })
   })
   
@@ -222,7 +254,7 @@ server <- function(input, output, session) {
     }
   })
   
-
+  
   
 }
 

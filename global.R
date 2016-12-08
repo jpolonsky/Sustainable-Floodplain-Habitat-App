@@ -20,15 +20,22 @@ predictedFlowValues <- read_rds("predictedFlowValues.rds")
 
 # Infobox Metrics ===============================================================
 
-# Q flow Metric
+# Q flow Metric -----------------------------------------------------------------
 
 # given a date get the mean daily for the flow data 
 GetMeanDaily <- function(d) {
   flowData$mean_daily[which(flowData$date == d)]
 }
 
-GetDaysUntil <- function(threshold, ciLevel) {
-  predictedFlowValues$date[which.min(predictedFlowValues - threshold)]
+# get the number of days until threshold is achieved
+GetDaysUntilThreshold <- function(d, threshold, ciLevel="p10") {
+  # create a dates to search through
+  dateLookups <- seq(as.Date(d), by = "day", length.out = 100)
+  valueLookups <- predictedFlowValues %>%
+    filter(date > as.Date(d), key == ciLevel)
+  
+  resultDate <-valueLookups$date[which(valueLookups$value > 20000)][1]
+  return(as.numeric(as.Date(resultDate) - as.Date(d)))
 }
 
 # fow showcase leave threshold at a default of 20000
