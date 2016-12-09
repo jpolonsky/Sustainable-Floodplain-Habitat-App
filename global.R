@@ -18,8 +18,11 @@ screwTrapData <- read_rds("screwTrapData.rds")
 flowData <- read_rds("flowData_BND_1993_2016.rds")
 predictedFlowValues <- read_rds("predictedFlowValues.rds")
 shastaPreds <- read_rds("shasta_preds_gathered_by_ci.rds")
+salmonRunsAggs <- read_csv("salmonRunsAggs.csv")
+salmonRunsAggs$day.month.year <- as.Date(salmonRunsAggs$day.month.year, format = "%m/%d/%Y")
 
 # Infobox Metrics ===============================================================
+# =================================================================================
 
 # Q flow Metric -----------------------------------------------------------------
 
@@ -76,7 +79,7 @@ SalmonDifference <- function(d) {
   selected <- GetSalmonAgg(d)
   
   lookUpValue <- paste0("2016-",format(as.Date(d), "%m-%d"))
-  historicalAgg <- salmonRunsAggs$Running.Sum.of.Unmarked[salmonRunsAggs$day.month.year == lookUpValue]
+  historicalAgg <- salmonRunsAggs$Running.Sum.of.Unmarked[which(salmonRunsAggs$day.month.year == lookUpValue)]
   historicalAgg <- parse_number(historicalAgg)
   
   list(
@@ -100,5 +103,36 @@ TodaysNeedColor <- function(d) {
   else 
     "red"
 }
+
+# Global Objects =====================================================================
+# ====================================================================================
+
+# list smoothers that can be used 
+smoothersList <- list(
+  "Linear Regression Fit"="lm", 
+  "Generalized Linear Fit"="glm", 
+  "Local Regression Fit (loess)"="loess",
+  "More Under Development"="more"
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

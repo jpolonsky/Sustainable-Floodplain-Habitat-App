@@ -26,7 +26,7 @@ ui <- dashboardPage(skin = "green",
                     dashboardSidebar( 
                       sidebarMenu(
                         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")), 
-                        menuItem("Data Sources", tabName = "rawData", icon = icon("list-alt")),
+                        menuItem("About the Dashboard", tabName = "rawData", icon = icon("list-alt")),
                         menuItem("About FlowWest", icon = icon("question-circle"), 
                                  tabName = "about",
                                  badgeColor = "green"),
@@ -60,7 +60,7 @@ ui <- dashboardPage(skin = "green",
                                    title = tagList(shiny::icon("area-chart"), "Visualizations"), 
                                    id = "visulizationTabs", 
                                    tabPanel("Flow", plotlyOutput("flowVisualization")), 
-                                   tabPanel("Ground Water", plotlyOutput("gwVisualization")), 
+                                   tabPanel("Groundwater", plotlyOutput("gwVisualization")), 
                                    tabPanel("Juvenile Salmon", plotlyOutput("screwTrapVisualization"))
                             ),
                             
@@ -86,15 +86,13 @@ ui <- dashboardPage(skin = "green",
                                                 infoBoxOutput("flowNaturalFlow", width = 12)
                                               )
                                      ), 
-                                     tabPanel("Ground Water",
-                                              dateInput("dateSelect", label = "Select a Custom Date",
-                                                        min = "2015-01-01", max = "2016-12-07",
-                                                        format = "yyyy-mm-dd", value = "2016-12-01"),
+                                     tabPanel("Groundwater",
+                                              selectInput("smoothSelect", 
+                                                          label = "Select a Smoother (Loess is Default)", 
+                                                          choices = smoothersList, 
+                                                          selected = "loess"),
                                               fluidRow(
                                                 infoBoxOutput("gwMetric1", width = 12) 
-                                              ),
-                                              fluidRow(
-                                                infoBoxOutput("gwMetric2", width = 12)
                                               )), 
                                      tabPanel("Juvenile Fish", 
                                               dateInput("dateSelectFish", label = "Select a Custom Date",
@@ -203,7 +201,7 @@ server <- function(input, output, session) {
   
   # Groundwater Infoboxes --------------------------------------------------------
   output$gwMetric1 <- renderInfoBox({
-    infoBox("Ground Water Metrics 1", fill = TRUE)
+    infoBox("Smoother applied to data:", input$smoothSelect,fill = TRUE)
   })
   
   output$gwMetric2 <- renderInfoBox({
@@ -242,7 +240,8 @@ server <- function(input, output, session) {
                   mode = "lines", 
                   name = "Flow", 
                   text = ~paste("Daily Mean: ", mean_daily)) %>%
-          add_trace(x=input$dateSelect, type ="scatter", name=paste0(input$dateSelect))
+          add_trace(x=input$dateSelect, type ="scatter", name=paste0(input$dateSelect)) %>%
+          layout(xaxis = list(title="Date"), yaxis= list(title="Daily Mean (cfs)"))
       })
     }
   })
@@ -257,13 +256,15 @@ server <- function(input, output, session) {
     }
     else 
       output$gwVisualization <- renderPlotly({
-        gwlData %>%
+        p <- gwlData %>%
           filter(LATITUDE == mapClick[3] & LONGITUDE == mapClick[4]) %>%
-          plot_ly(x=~reading_date, y=~wse, 
-                  type = "scatter", 
-                  mode = "lines+markers", 
-                  name="Ground Water Levels", 
-                  text = ~paste("Water Surface Elevation: ", wse, "ft."))
+          ggplot(aes(reading_date, wse)) + 
+          geom_point(aes(reading_date, wse)) +
+          geom_line(aes(reading_date, wse)) +
+          geom_smooth(method = input$smoothSelect) + 
+          xlab("Reading Date") + ylab("Water Surface Elevation ft.")
+        
+          ggplotly(p)
         
       })
   })
@@ -285,7 +286,7 @@ server <- function(input, output, session) {
           ) %>%
           plot_ly(x=~reading_month, y=~Monthly_Unmarked_Mean, 
                   type="bar", color=~FinalRun) %>%
-          layout(barmode = "stacked")
+          layout(xaxis=list(title="Month"), yaxis=list(title="Mean Count"))
         
       })
     }
