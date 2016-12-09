@@ -20,6 +20,8 @@ predictedFlowValues <- read_rds("predictedFlowValues.rds")
 shastaPreds <- read_rds("shasta_preds_gathered_by_ci.rds")
 salmonRunsAggs <- read_csv("salmonRunsAggs.csv")
 salmonRunsAggs$day.month.year <- as.Date(salmonRunsAggs$day.month.year, format = "%m/%d/%Y")
+shasta_preds_v <- read_csv("shasta_preds_by_ci.csv")
+shasta_preds_v$start <- as.Date(shasta_preds_v$start, format = "%m/%d/%Y")
 
 # Infobox Metrics ===============================================================
 # =================================================================================
@@ -86,6 +88,12 @@ SalmonDifference <- function(d) {
     "HistoricalValue" = historicalAgg, 
     "Difference" = (historicalAgg - selected)
   )
+}
+
+GetHistoricalPercent <- function(d) {
+  lookupData <- paste0("2016-",format(as.Date(d), "%m-%d"))
+  proportion <- salmonRunsAggs$Percent.of.Run[which(salmonRunsAggs$day.month.year == lookupData)]
+  parse_number(proportion)
 }
 
 

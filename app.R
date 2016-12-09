@@ -11,6 +11,7 @@ library(shinydashboard)
 library(leaflet)
 library(ggplot2)
 library(plotly)
+library(dplyr)
 
 # import modules
 source("global.R")
@@ -25,8 +26,7 @@ ui <- dashboardPage(skin = "green",
                     # Dashboard Sidebar =======================================================
                     dashboardSidebar( 
                       sidebarMenu(
-                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")), 
-                        menuItem("About the Dashboard", tabName = "rawData", icon = icon("list-alt")),
+                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                         menuItem("About FlowWest", icon = icon("question-circle"), 
                                  tabName = "about",
                                  badgeColor = "green"),
@@ -60,8 +60,9 @@ ui <- dashboardPage(skin = "green",
                                    title = tagList(shiny::icon("area-chart"), "Visualizations"), 
                                    id = "visulizationTabs", 
                                    tabPanel("Flow", plotlyOutput("flowVisualization")), 
-                                   tabPanel("Groundwater", plotlyOutput("gwVisualization")), 
-                                   tabPanel("Juvenile Salmon", plotlyOutput("screwTrapVisualization"))
+                                   tabPanel("Flow Prediction", plotOutput("flowPredictions")),
+                                   tabPanel("Juvenile Salmon", plotOutput("screwTrapVisualization")),
+                                   tabPanel("Groundwater", plotlyOutput("gwVisualization"))
                             ),
                             
                             # Analytic Results 
@@ -74,7 +75,7 @@ ui <- dashboardPage(skin = "green",
                                      tabPanel("Flow",
                                               dateInput("dateSelect", label = "Select a Custom Date",
                                                         min = "2015-01-01", max = "2016-12-04",
-                                                        format = "yyyy-mm-dd", value = "2016-12-01"),
+                                                        format = "yyyy-mm-dd", value = "2016-11-23"),
                                               
                                               fluidRow(
                                                 infoBoxOutput("flowThreshold", width = 12) 
@@ -86,6 +87,16 @@ ui <- dashboardPage(skin = "green",
                                                 infoBoxOutput("flowNaturalFlow", width = 12)
                                               )
                                      ), 
+                                     tabPanel("Juvenile Salmon", 
+                                              dateInput("dateSelectFish", label = "Select a Custom Date",
+                                                        min = "1995-01-01", max = "2016-12-31",
+                                                        format = "yyyy-mm-dd", value = "2016-12-01"),
+                                              fluidRow(
+                                                infoBoxOutput("screwTrapMetric1", width = 12) 
+                                              ),
+                                              fluidRow(
+                                                infoBoxOutput("screwTrapMetric2", width = 12)
+                                              )),
                                      tabPanel("Groundwater",
                                               selectInput("smoothSelect", 
                                                           label = "Select a Smoother (Loess is Default)", 
@@ -93,17 +104,8 @@ ui <- dashboardPage(skin = "green",
                                                           selected = "loess"),
                                               fluidRow(
                                                 infoBoxOutput("gwMetric1", width = 12) 
-                                              )), 
-                                     tabPanel("Juvenile Fish", 
-                                              dateInput("dateSelectFish", label = "Select a Custom Date",
-                                                        min = "1995-01-01", max = "2016-12-07",
-                                                        format = "yyyy-mm-dd", value = "2016-12-01"),
-                                              fluidRow(
-                                                infoBoxOutput("screwTrapMetric1", width = 12) 
-                                              ),
-                                              fluidRow(
-                                                infoBoxOutput("screwTrapMetric2", width = 12)
-                                              ))
+                                              )) 
+                                     
                                    )
                                    
                             )
@@ -113,9 +115,11 @@ ui <- dashboardPage(skin = "green",
                         # FlowWest About Page
                         tabItem(
                           tabName = "about",
+                          tags$a(href="http://www.flowwest.com/",
                           tags$img(src="FlowWestLogo.png",
                                    width=250, height=73,
                                    style="display: block; margin-left: auto; margin-right: auto;"),
+                          target="_blank"),
                           tags$br(),
                           includeHTML("flowwest_about.html")
                         ), 
@@ -157,7 +161,7 @@ server <- function(input, output, session) {
                  lng=~lng, 
                  lat=~lat,
                  group = "Screw Trap", 
-                 popup = "View Screw Trap Visual Below",
+                 popup = "Juvenile Salmon Visual Below",
                  layerId = "screwTrap_markers", 
                  icon = blueFishIcon) %>%
       
@@ -180,21 +184,20 @@ server <- function(input, output, session) {
   # Flow Infoboxes -----------------------------------------------------------------
   output$flowThreshold <- renderInfoBox({
     infoBox(
-      "The flow threshold is currently at", Qmetric(input$dateSelect)$Threshold, "cfs",
+      "Flodplain inundation threshold", Qmetric(input$dateSelect)$Threshold, "cfs",
       color = "green", 
       fill = TRUE
     )
   })
   output$flowTodaysNeed <- renderInfoBox({
     infoBox(
-      "Today's need is at", Qmetric(input$dateSelect)$NeedToday, "cfs", 
+      "Additional Flow Needed To Inundate", Qmetric(input$dateSelect)$NeedToday, "cfs", 
       color = paste0(TodaysNeedColor(input$dateSelect)), fill = TRUE
     )
   })
   output$flowNaturalFlow <- renderInfoBox({
     infoBox(
-      "Natural Flow in", paste(GetDaysUntilThreshold(input$dateSelect, 20000), 
-                               "Days", sep = " "), 
+      "Predicted flow will inundate in", paste(GetDaysUntilThreshold(input$dateSelect, 20000),"Days", sep = " "),
       color = "orange", fill = TRUE
     )
   })
@@ -210,14 +213,14 @@ server <- function(input, output, session) {
   
   # ScrewTrap Infoboxes -----------------------------------------------------------
   output$screwTrapMetric1 <- renderInfoBox({
-    infoBox("The number of Juvenile Salmon to Date:", 
+    infoBox("Number of Juvenile Salmon available for floodplain:", 
             paste0(GetSalmonAgg(input$dateSelectFish), " Counted Fish"),
             fill = TRUE, color ="olive")
   })
   
   output$screwTrapMetric2 <- renderInfoBox({
-    infoBox("Compared to the Historical value: ", 
-            paste0(SalmonDifference(input$dateSelectFish)$HistoricalValue, " Fish"),
+    infoBox("Proporion of year class present: ", 
+            paste0(GetHistoricalPercent(input$dateSelectFish), "%"),
             fill = TRUE, color ="yellow")
   })
   
@@ -241,7 +244,7 @@ server <- function(input, output, session) {
                   name = "Flow", 
                   text = ~paste("Daily Mean: ", mean_daily)) %>%
           add_trace(x=input$dateSelect, type ="scatter", name=paste0(input$dateSelect)) %>%
-          layout(xaxis = list(title="Date"), yaxis= list(title="Daily Mean (cfs)"))
+          layout(xaxis = list(title="Date"), yaxis= list(title="Mean Daily Flow (cfs)"))
       })
     }
   })
@@ -277,20 +280,35 @@ server <- function(input, output, session) {
     } else if (mapClick[1] != "screwTrap_markers") {
       return()
     } else {
-      output$screwTrapVisualization <- renderPlotly({
+      output$screwTrapVisualization <- renderPlot({
         screwTrapData %>%
-          select(reading_month, Unmarked, FinalRun) %>%
-          group_by(FinalRun, reading_month) %>%
-          summarise(
-            Monthly_Unmarked_Mean = mean(Unmarked, na.rm = TRUE)
-          ) %>%
-          plot_ly(x=~reading_month, y=~Monthly_Unmarked_Mean, 
-                  type="bar", color=~FinalRun) %>%
-          layout(xaxis=list(title="Month"), yaxis=list(title="Mean Count"))
+          filter(FinalRun != "Unassigned", SampleDate_formated > as.Date("2004-01-01")) %>%
+          sample_frac(.35) %>%
+          ggplot(aes(SampleDate_formated, Unmarked, color=FinalRun)) + geom_point() + facet_grid(FinalRun ~ .) + 
+          xlab("Date") + ylab("Juvenile Salmon Count")
         
       })
     }
   })
+  
+  # flow predictions 
+  observe({
+    mapClick <- input$mapView_marker_click
+    if (is.null(mapClick)) {
+      return()
+    } else if (mapClick[1] != "flow_markers") {
+      return()
+    } else {
+      output$flowPredictions <- renderPlot({
+        p <- ggplot(data = shasta_preds_v) + geom_line(aes(x=start, y=value, color = key, group = start)) + 
+          xlab("Date") + guides(color = guide_legend(title = "Predicted Probability")) + 
+          ylab("Flow (cfs)")
+        print(p)
+      })
+    }
+  })
+  
+  
 }
 
 # Run the application 
